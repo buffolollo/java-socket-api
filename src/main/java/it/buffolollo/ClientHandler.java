@@ -13,12 +13,19 @@ class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private Map<String, BiConsumer<Request, Response>> getHandlers = new HashMap<>();
     private Map<String, BiConsumer<Request, Response>> postHandlers = new HashMap<>();
+    private final boolean cors;
 
     public ClientHandler(Socket clientSocket, Map<String, BiConsumer<Request, Response>> getHandlers,
             Map<String, BiConsumer<Request, Response>> postHandlers) {
+        this(clientSocket, getHandlers, postHandlers, false);
+    }
+
+    public ClientHandler(Socket clientSocket, Map<String, BiConsumer<Request, Response>> getHandlers,
+            Map<String, BiConsumer<Request, Response>> postHandlers, boolean cors) {
         this.clientSocket = clientSocket;
         this.getHandlers = getHandlers;
         this.postHandlers = postHandlers;
+        this.cors = cors;
     }
 
     @Override
@@ -47,7 +54,7 @@ class ClientHandler implements Runnable {
     }
 
     private void handleGetRequest(Socket clientSocket, String path, BufferedReader in, PrintWriter out, Request req) {
-        Response res = new Response(clientSocket, out);
+        Response res = createResponse(clientSocket, out);
 
         try {
             String line;
@@ -99,7 +106,7 @@ class ClientHandler implements Runnable {
     }
 
     private void handlePostRequest(Socket clientSocket, String path, BufferedReader in, PrintWriter out) {
-        Response res = new Response(clientSocket, out);
+        Response res = createResponse(clientSocket, out);
         Request req = new Request("POST", path);
 
         try {
@@ -188,5 +195,14 @@ class ClientHandler implements Runnable {
 
     private void handleNotFound(Response res) {
         res.status(404).send("<html><body><h1>Not found</h1></body></html>");
+    }
+
+    private Response createResponse(Socket clientSocket, PrintWriter out) {
+        Response res = new Response(clientSocket, out);
+        if (cors) {
+            res.header("Access-Control-Allow-Origin", "*")
+                    .header("Content-Type", "application/json");
+        }
+        return res;
     }
 }

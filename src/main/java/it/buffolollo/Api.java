@@ -17,6 +17,7 @@ public class Api {
     private ServerSocket serverSocket;
     private Map<String, BiConsumer<Request, Response>> getHandlers = new HashMap<>();
     private Map<String, BiConsumer<Request, Response>> postHandlers = new HashMap<>();
+    private final boolean cors;
 
     /**
      * Creates an instance of the Api class that listens on the specified port.
@@ -26,7 +27,20 @@ public class Api {
      * @throws IOException if an I/O error occurs when opening the socket
      */
     public Api(int port) throws IOException {
+        this(port, false);
+    }
+
+    /**
+     * Creates an instance of the Api class that listens on the specified port.
+     *
+     * @param port the port number on which the server will listen for incoming
+     *             connections
+     * @param cors whether to include CORS response headers
+     * @throws IOException if an I/O error occurs when opening the socket
+     */
+    public Api(int port, boolean cors) throws IOException {
         serverSocket = new ServerSocket(port);
+        this.cors = cors;
     }
 
     /**
@@ -62,7 +76,7 @@ public class Api {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
 
-                new Thread(new ClientHandler(clientSocket, getHandlers, postHandlers)).start();
+                new Thread(new ClientHandler(clientSocket, getHandlers, postHandlers, cors)).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
