@@ -200,8 +200,7 @@ class ClientHandler implements Runnable {
     private Response createResponse(Socket clientSocket, PrintWriter out) {
         Response res = new Response(clientSocket, out);
         if (cors) {
-            res.header("Access-Control-Allow-Origin", "*")
-                    .header("Content-Type", "application/json");
+            res.header("Access-Control-Allow-Origin", "*");
         }
         return res;
     }
